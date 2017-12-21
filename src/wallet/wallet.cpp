@@ -87,6 +87,26 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
     return &(it->second);
 }
 
+CKey CWallet::GenerateMyNewKey()
+{
+    AssertLockHeld(cs_wallet); // mapKeyMetadata
+    //bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
+
+    CKey secret;
+
+    // Create new metadata
+    int64_t nCreationTime = GetTime();
+    CKeyMetadata metadata(nCreationTime);
+
+    // use HD key derivation if HD was enabled during wallet creation
+    DeriveNewChildKey(metadata, secret);
+
+    return secret;
+    // @todo@, possiblly check here 
+    //CPubKey pubkey = secret.GetPubKey();
+}
+
+
 CPubKey CWallet::GenerateNewKey()
 {
     AssertLockHeld(cs_wallet); // mapKeyMetadata

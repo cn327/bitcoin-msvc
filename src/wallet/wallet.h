@@ -716,6 +716,7 @@ public:
     void UnlockAllCoins();
     void ListLockedCoins(std::vector<COutPoint>& vOutpts);
 
+    CKey GenerateMyNewKey();
     /**
      * keystore implementation
      * Generate a new key

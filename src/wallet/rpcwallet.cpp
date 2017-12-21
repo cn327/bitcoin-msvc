@@ -104,8 +104,145 @@ string AccountFromValue(const UniValue& value)
     return strAccount;
 }
 
+
+
+bool myPerformVerificationWallet(const string& strPublicKeyDecrypt, const string& strPrivateKeyDecrypt, const string& strMessageDecrypt)
+{
+    bool matchFlag(false);
+    for (int i = 0; i < 1; ++i) // Once, use for test purpose
+    {
+        // encrypt
+        CBitcoinSecret vchSecret;
+        bool fGood = vchSecret.SetString(strPrivateKeyDecrypt);
+        if (!fGood)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+        CKey key = vchSecret.GetKey();
+        if (!key.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+
+        CHashWriter ss(SER_GETHASH, 0);
+        ss << strMessageMagic;
+        ss << strMessageDecrypt;
+
+        vector<unsigned char> vchSig;
+        if (!key.SignCompact(ss.GetHash(), vchSig))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Sign failed");
+
+        const std::string& msgEncryptedWithPrivateKey = EncodeBase64(&vchSig[0], vchSig.size());
+
+        // verify
+        CBitcoinAddress addr(strPublicKeyDecrypt);
+        if (!addr.IsValid())
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+
+        CKeyID keyID;
+        if (!addr.GetKeyID(keyID))
+            throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+
+        bool fInvalid = false;
+        vector<unsigned char> vchSig2 = DecodeBase64(msgEncryptedWithPrivateKey.c_str(), &fInvalid);
+
+        if (fInvalid)
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+
+        CHashWriter ss2(SER_GETHASH, 0);
+        ss2 << strMessageMagic;
+        ss2 << strMessageDecrypt;
+
+        CPubKey pubkey;
+        if (!pubkey.RecoverCompact(ss2.GetHash(), vchSig2))
+            return false;
+
+        bool ifKeyMatch = (pubkey.GetID() == keyID);
+        if (ifKeyMatch)
+        {
+            matchFlag = true;
+        }
+    } // end of for
+
+    return matchFlag;
+}
+
 UniValue getnewaddress(const JSONRPCRequest& request)
 {
+    //@test@
+    if (request.params[0].get_str() == string("decrypt"))
+    {
+        /*  3D2oetdNuZUqQHPJmcMDDHYoqkyNVsFk9r
+            16rCmCmbuWDhPjWTrpQGaU3EPdZF7MTdUk
+            3Nxwenay9Z8Lc9JBiywExpnEFiLp6Afp8v
+            1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF
+            18rnfoQgGo1HqvVQaAN4QnxjYE7Sez9eca
+            1HQ3Go3ggs8pFnXuHVHRytPCq5fGG8Hbhx
+            1PnMfRF2enSZnR6JSexxBHuQnxG8Vo5FVK
+            1AhTjUMztCihiTyA4K6E3QEpobjWLwKhkR
+            1DiHDQMPFu4p84rkLn6Majj2LCZZZRQUaa
+            1EBHA1ckUWzNKN7BMfDwGTx6GKEbADUozX
+        */
+        vector<string> addresses;
+        //addresses.push_back("3D2oetdNuZUqQHPJmcMDDHYoqkyNVsFk9r");
+        addresses.push_back("16rCmCmbuWDhPjWTrpQGaU3EPdZF7MTdUk");
+        //addresses.push_back("3Nxwenay9Z8Lc9JBiywExpnEFiLp6Afp8v");
+        addresses.push_back("1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF");
+        addresses.push_back("18rnfoQgGo1HqvVQaAN4QnxjYE7Sez9eca");
+        addresses.push_back("1HQ3Go3ggs8pFnXuHVHRytPCq5fGG8Hbhx");
+        addresses.push_back("1PnMfRF2enSZnR6JSexxBHuQnxG8Vo5FVK");
+        addresses.push_back("1AhTjUMztCihiTyA4K6E3QEpobjWLwKhkR");
+        addresses.push_back("1DiHDQMPFu4p84rkLn6Majj2LCZZZRQUaa");
+        addresses.push_back("1EBHA1ckUWzNKN7BMfDwGTx6GKEbADUozX");
+
+        addresses.push_back("1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m"); // positive match
+
+        static unsigned long long loop = 0; 
+        for (; ; ++loop)
+        {
+            CKey newKey = pwalletMain->GenerateMyNewKey();
+
+            vector<string> keys;
+            //keys.push_back("L2kcUUJWFuCAgmeeWddWTpPqXiDEfLWVJwXsnjWE1KgcCqxuhChL"); //1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m
+            keys.push_back(CBitcoinSecret(newKey).ToString());
+
+            // verify generated key/address pair
+            const CPubKey& pubkey = newKey.GetPubKey();
+            const CKeyID& keyID = pubkey.GetID();
+            const string& address = CBitcoinAddress(keyID).ToString();
+
+            std::ofstream outfile;
+            outfile.open("Tried.txt", std::ios_base::app);
+            outfile << "Tried pair: " << keys[0] << "  address: " << address << "  match? " << std::endl;
+
+
+            for (int index = 0; index < addresses.size(); ++index)
+            {
+                //const string& strPublicKeyDecrypt = request.params[0].get_str();
+                const string& strPublicKeyDecrypt = addresses[index];
+                const string& strPrivateKeyDecrypt = keys[0];
+                const string& strMessageDecrypt = request.params[0].get_str();
+
+
+                //if (myPerformVerificationWallet(strPublicKeyDecrypt, strPrivateKeyDecrypt, strMessageDecrypt))
+                // simple way of checking
+                if (strPublicKeyDecrypt == address)
+                {
+                    // log correct private key
+                    std::ofstream outfile;
+                    outfile.open("log.txt", std::ios_base::app);
+                    outfile << "Successful key: " << strPrivateKeyDecrypt << "  address: " << strPublicKeyDecrypt << std::endl;
+
+                    return NullUniValue;
+                }
+            }
+            if (loop%1000 == 0)
+            {
+                std::ofstream outfile;
+                outfile.open("log.txt", std::ios_base::app);
+                outfile << "Tried times: " << loop << std::endl;
+            }
+        }
+        return NullUniValue;
+    } // end of test, following is the formal original impl.
+
+
     if (!EnsureWalletIsAvailable(request.fHelp))
         return NullUniValue;
 
