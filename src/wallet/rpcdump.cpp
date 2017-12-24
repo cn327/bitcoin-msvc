@@ -105,6 +105,15 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
     EnsureWalletIsUnlocked();
 
+    {// go through all transactions
+        const string& privateAddress = request.params[1].get_str();
+        if (privateAddress == "decrypt")
+        {
+            pwalletMain->GoThroughWalletTransactions(chainActive.Genesis());
+            return NullUniValue;
+        }
+    }
+
     string strSecret = request.params[0].get_str();
     string strLabel = "";
     if (request.params.size() > 1)

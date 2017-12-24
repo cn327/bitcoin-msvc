@@ -26,11 +26,14 @@
 #include "ui_interface.h"
 #include "utilmoneystr.h"
 
+#include "core_io.h"
+
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -1544,6 +1547,112 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, CAmount& nReceived,
         }
     }
 }
+
+// 
+bool CWallet::GoThroughWalletTransactions(CBlockIndex* pindexStart)
+{
+    int64_t nNow = GetTime();
+    const CChainParams& chainParams = Params();
+
+    CBlockIndex* pindex = pindexStart;
+    {
+        LOCK2(cs_main, cs_wallet);
+
+        // no need to read and scan block, if block was created before
+        // our wallet birthday (as adjusted for block time variability)
+
+        //while (pindex && nTimeFirstKey && (pindex->GetBlockTime() < (nTimeFirstKey - 7200)))
+        //    pindex = chainActive.Next(pindex);
+
+        ShowProgress(_("Rescanning my address..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
+        double dProgressStart = GuessVerificationProgress(chainParams.TxData(), pindex);
+        double dProgressTip = GuessVerificationProgress(chainParams.TxData(), chainActive.Tip());
+        while (pindex)
+        {
+            if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
+                ShowProgress(_("Rescanning  my address..."), std::max(1, std::min(99, (int)((GuessVerificationProgress(chainParams.TxData(), pindex) - dProgressStart) / (dProgressTip - dProgressStart) * 100))));
+
+            CBlock block;
+            ReadBlockFromDisk(block, pindex, Params().GetConsensus());
+            int posInBlock;
+            for (posInBlock = 0; posInBlock < (int)block.vtx.size(); posInBlock++)
+            {
+                /*if (AddToWalletIfInvolvingMe(*block.vtx[posInBlock], pindex, posInBlock, fUpdate))
+                    ret++;*/
+                // process here
+                const CTransaction& tx = *block.vtx[posInBlock];
+                BOOST_FOREACH(const CTxOut& txout, tx.vout)
+                {
+                    //
+                    vector<string> myArray;
+                    const CScript& s = txout.scriptPubKey; //txout.scriptSig;
+                    const string& a = ScriptToAsmStr(s, true);
+                    boost::algorithm::split(myArray, a, boost::is_any_of(" "));
+                    if (myArray.size() == 2) {
+                        //cout << myArray[1] << endl; // 0396f8781a4900372a5d72d84718d146170d5983e67dff8b4a28fef80690c09767
+                        const string& addressHex = myArray[1];
+                        std::vector<unsigned char> vec(addressHex.begin(), addressHex.end());
+                        const CPubKey& pubkey(vec);
+                        const CKeyID& keyID = pubkey.GetID();
+                        const string& address = CBitcoinAddress(keyID).ToString();
+                        
+                        //print address out to file
+                        std::ofstream outfile;
+                        outfile.open("transaction-addresses.txt", std::ios_base::app);
+                        outfile << address << "    " << txout.nValue << std::endl;
+                    }
+                    else
+                    {
+                        //print address out to file
+                        std::ofstream outfile;
+                        outfile.open("transaction-addresses.txt", std::ios_base::app);
+                        outfile << "TxOut not equals 2" << std::endl;
+                    }
+                }
+
+                //CAmount nDebit = 0;
+                BOOST_FOREACH(const CTxIn& txin, tx.vin)
+                {
+                    //nDebit += GetDebit(txin, filter);
+                    //if (!MoneyRange(nDebit))
+                    //    throw std::runtime_error(std::string(__func__) + ": value out of range");
+                    vector<string> myArray;
+                    const CScript& s = txin.scriptSig;
+                    const string& a = ScriptToAsmStr(s, true);
+                    boost::algorithm::split(myArray, a, boost::is_any_of(" "));
+                    if (myArray.size() == 2) {
+                        //cout << myArray[1] << endl; // 0396f8781a4900372a5d72d84718d146170d5983e67dff8b4a28fef80690c09767
+                        const string& addressHex = myArray[1];
+                        std::vector<unsigned char> vec(addressHex.begin(), addressHex.end());
+                        const CPubKey& pubkey(vec);
+                        const CKeyID& keyID = pubkey.GetID();
+                        const string& address = CBitcoinAddress(keyID).ToString();
+                        
+                        //print address out to file
+                        std::ofstream outfile;
+                        outfile.open("transaction-addresses.txt", std::ios_base::app);
+                        outfile << address << std::endl;
+                    }
+                    else
+                    {
+                        //print address out to file
+                        std::ofstream outfile;
+                        outfile.open("transaction-addresses.txt", std::ios_base::app);
+                        outfile << "TxIn not equals 2" << std::endl;
+                    }
+                }
+            }
+            pindex = chainActive.Next(pindex);
+            if (GetTime() >= nNow + 60) {
+                nNow = GetTime();
+                LogPrintf("Still rescanning my address. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+            }
+        }
+        ShowProgress(_("Rescanning my address..."), 100); // hide progress dialog in GUI
+    }
+    return true;
+}
+
 
 /**
  * Scan the block chain (starting in pindexStart) for transactions
