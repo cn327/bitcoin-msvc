@@ -1590,8 +1590,8 @@ bool CWallet::GoThroughWalletTransactions(CBlockIndex* pindexStart)
                     boost::algorithm::split(myArray, a, boost::is_any_of(" "));
                     if (myArray.size() == 2) {
                         //cout << myArray[1] << endl; // 0396f8781a4900372a5d72d84718d146170d5983e67dff8b4a28fef80690c09767
-                        const string& addressHex = myArray[1];
-                        std::vector<unsigned char> vec(addressHex.begin(), addressHex.end());
+                        //const string& addressHex = myArray[1];
+                        std::vector<unsigned char> vec = ParseHex(myArray[0]);// (addressHex.begin(), addressHex.end());
                         const CPubKey& pubkey(vec);
                         const CKeyID& keyID = pubkey.GetID();
                         const string& address = CBitcoinAddress(keyID).ToString();
@@ -1599,14 +1599,14 @@ bool CWallet::GoThroughWalletTransactions(CBlockIndex* pindexStart)
                         //print address out to file
                         std::ofstream outfile;
                         outfile.open("transaction-addresses.txt", std::ios_base::app);
-                        outfile << address << "    " << txout.nValue << std::endl;
+                        outfile << " Height: " << pindex->nHeight << " out address: " << address << "    " << txout.nValue << std::endl;
                     }
                     else
                     {
                         //print address out to file
                         std::ofstream outfile;
                         outfile.open("transaction-addresses.txt", std::ios_base::app);
-                        outfile << "TxOut not equals 2" << std::endl;
+                        outfile << "ERROR Height: " << pindex->nHeight << " out address: " << "TxOut not equals 2" << std::endl;
                     }
                 }
 
@@ -1620,10 +1620,10 @@ bool CWallet::GoThroughWalletTransactions(CBlockIndex* pindexStart)
                     const CScript& s = txin.scriptSig;
                     const string& a = ScriptToAsmStr(s, true);
                     boost::algorithm::split(myArray, a, boost::is_any_of(" "));
-                    if (myArray.size() == 2) {
+                    if (myArray.size() == 3) {
                         //cout << myArray[1] << endl; // 0396f8781a4900372a5d72d84718d146170d5983e67dff8b4a28fef80690c09767
-                        const string& addressHex = myArray[1];
-                        std::vector<unsigned char> vec(addressHex.begin(), addressHex.end());
+                        //const string& addressHex = ParseHex(myArray[1]);
+                        std::vector<unsigned char> vec = ParseHex(myArray[1]); //(addressHex.begin(), addressHex.end());
                         const CPubKey& pubkey(vec);
                         const CKeyID& keyID = pubkey.GetID();
                         const string& address = CBitcoinAddress(keyID).ToString();
@@ -1631,21 +1631,21 @@ bool CWallet::GoThroughWalletTransactions(CBlockIndex* pindexStart)
                         //print address out to file
                         std::ofstream outfile;
                         outfile.open("transaction-addresses.txt", std::ios_base::app);
-                        outfile << address << std::endl;
+                        outfile << "ERROR Height: " << pindex->nHeight << " in address: " << address << std::endl;
                     }
                     else
                     {
                         //print address out to file
                         std::ofstream outfile;
                         outfile.open("transaction-addresses.txt", std::ios_base::app);
-                        outfile << "TxIn not equals 2" << std::endl;
+                        outfile << " Height: " << pindex->nHeight << " in address: " << "TxIn not equals 2" << std::endl;
                     }
                 }
             }
             pindex = chainActive.Next(pindex);
             if (GetTime() >= nNow + 60) {
                 nNow = GetTime();
-                LogPrintf("Still rescanning my address. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
+                //LogPrintf("Still rescanning my address. At block %d. Progress=%f\n", pindex->nHeight, GuessVerificationProgress(chainParams.TxData(), pindex));
             }
         }
         ShowProgress(_("Rescanning my address..."), 100); // hide progress dialog in GUI
