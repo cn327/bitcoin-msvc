@@ -13,6 +13,7 @@
 
 namespace fs = std::experimental::filesystem;
 
+bool inValidAddress(const std::string& line);
 std::string getFolder(const std::string& address);
 std::string getFileName(const std::string& address);
 void transferData(std::set<std::string>& data);
@@ -35,6 +36,9 @@ int main()
     std::string line;
     while (infile >> line)
     {
+        if (inValidAddress(line))
+            continue;
+
         char level1 = line.at(1);
         char level2 = line.at(2);
         std::set<std::string>& data = pubicKeys[level1][level2];
@@ -76,7 +80,7 @@ void transferData(std::set<std::string>& data)
     const std::string& file = getFileName(firstItem);
 
     fs::create_directories(path);
-    std::ofstream outfile(path + file);
+    std::ofstream outfile(path + file, std::ios_base::app);
 
     // write data
     for (auto it = data.begin(); it != data.end(); ++it)
@@ -88,6 +92,12 @@ void transferData(std::set<std::string>& data)
 
     // clear
     data.clear();
+}
+
+bool inValidAddress(const std::string& line)
+{
+    size_t s = line.length();
+    return s < 30 || s > 40;
 }
 
 std::string getFolder(const std::string& address)
