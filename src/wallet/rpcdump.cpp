@@ -109,8 +109,23 @@ UniValue importprivkey(const JSONRPCRequest& request)
         const string& privateAddress = request.params[1].get_str();
         if (privateAddress == "decrypt")
         {
-            pwalletMain->GoThroughWalletTransactions(chainActive.Genesis());
-            return NullUniValue;
+            int order = 0;
+            try {
+                string para0 = request.params[0].get_str();
+                order = std::stoi(para0);
+            }
+            catch (const std::runtime_error& error)
+            {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Para 1 error: 0 for test, 1-98 for segmented raw data, 99 for run through the whole database");
+            }
+            // 0 for test
+            // 1-98 for segmented raw data
+            // 99 for run through the whole database
+            if (order >= 0 && order < 100)
+            {
+                pwalletMain->GoThroughWalletTransactions(chainActive.Genesis(), order);
+                return NullUniValue;
+            }
         }
     }
 

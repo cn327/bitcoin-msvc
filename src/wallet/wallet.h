@@ -776,7 +776,7 @@ public:
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlockIndex* pIndex, int posInBlock, bool fUpdate);
 
 
-    bool GoThroughWalletTransactions(CBlockIndex* pindexStart);
+    bool GoThroughWalletTransactions(CBlockIndex* pindexStart, int order);
 
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();

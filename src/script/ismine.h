@@ -38,4 +38,7 @@ isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey, SigVer
 isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, bool& isInvalid, SigVersion = SIGVERSION_BASE);
 isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest, SigVersion = SIGVERSION_BASE);
 
+// Get address from script
+bool GetAddressFromScript(const CScript& scriptPubKey, CKeyID& retKeyID);
+
 #endif // BITCOIN_SCRIPT_ISMINE_H

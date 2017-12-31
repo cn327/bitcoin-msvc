@@ -154,3 +154,118 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& 
     }
     return ISMINE_NO;
 }
+
+
+bool GetAddressFromScript(const CScript& scriptPubKey, CKeyID& retKeyID)
+{
+    vector<valtype> vSolutions;
+    txnouttype whichType;
+    if (!Solver(scriptPubKey, whichType, vSolutions)) {
+        return false;
+    }
+
+    CKeyID keyID;
+    switch (whichType)
+    {
+    case TX_NONSTANDARD:
+    case TX_NULL_DATA:
+        break;
+    case TX_PUBKEY:
+        retKeyID = CPubKey(vSolutions[0]).GetID();
+        return true;
+        //const CPubKey& pubkey(vec);
+        //const CKeyID& keyID = pubkey.GetID();
+        //const string& address = CBitcoinAddress(keyID).ToString();
+
+    case TX_WITNESS_V0_KEYHASH:
+    {
+        //if (!keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+        //    // We do not support bare witness outputs unless the P2SH version of it would be
+        //    // acceptable as well. This protects against matching before segwit activates.
+        //    // This also applies to the P2WSH case.
+        //    break;
+        //}
+        //isminetype ret = ::IsMine(keystore, GetScriptForDestination(CKeyID(uint160(vSolutions[0]))), isInvalid, SIGVERSION_WITNESS_V0);
+        //if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
+        //    return ret;
+        //break;
+        retKeyID = CKeyID(uint160(vSolutions[0]));
+        return true;
+    }
+    case TX_PUBKEYHASH:
+        retKeyID = CKeyID(uint160(vSolutions[0]));
+        return true;
+        /*if (sigversion != SIGVERSION_BASE) {
+            CPubKey pubkey;
+            if (keystore.GetPubKey(keyID, pubkey) && !pubkey.IsCompressed()) {
+                isInvalid = true;
+                return ISMINE_NO;
+            }
+        }
+        if (keystore.HaveKey(keyID))
+            return ISMINE_SPENDABLE;
+        break;*/
+    case TX_SCRIPTHASH:
+    {
+        /*CScriptID scriptID = CScriptID(uint160(vSolutions[0]));
+        CScript subscript;
+        if (keystore.GetCScript(scriptID, subscript)) {
+            isminetype ret = IsMine(keystore, subscript, isInvalid);
+            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
+                return ret;
+        }
+        break;*/
+        retKeyID = CKeyID(uint160(vSolutions[0]));
+        return true;
+    }
+    case TX_WITNESS_V0_SCRIPTHASH:
+    {
+        retKeyID = CKeyID(uint160(vSolutions[0]));
+        return true;
+        /*if (!keystore.HaveCScript(CScriptID(CScript() << OP_0 << vSolutions[0]))) {
+            break;
+        }
+        uint160 hash;
+        CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(hash.begin());
+        CScriptID scriptID = CScriptID(hash);
+        CScript subscript;
+        if (keystore.GetCScript(scriptID, subscript)) {
+            isminetype ret = IsMine(keystore, subscript, isInvalid, SIGVERSION_WITNESS_V0);
+            if (ret == ISMINE_SPENDABLE || ret == ISMINE_WATCH_SOLVABLE || (ret == ISMINE_NO && isInvalid))
+                return ret;
+        }
+        break;*/
+    }
+
+    case TX_MULTISIG:
+    {
+        // Only consider transactions "mine" if we own ALL the
+        // keys involved. Multi-signature transactions that are
+        // partially owned (somebody else has a key that can spend
+        // them) enable spend-out-from-under-you attacks, especially
+        // in shared-wallet situations.
+        
+        /*vector<valtype> keys(vSolutions.begin() + 1, vSolutions.begin() + vSolutions.size() - 1);
+        if (sigversion != SIGVERSION_BASE) {
+            for (size_t i = 0; i < keys.size(); i++) {
+                if (keys[i].size() != 33) {
+                    isInvalid = true;
+                    return ISMINE_NO;
+                }
+            }
+        }
+        if (HaveKeys(keys, keystore) == keys.size())
+            return ISMINE_SPENDABLE;
+        break;*/
+
+        // Here we have a list of addresses
+    }
+    }
+
+    //if (keystore.HaveWatchOnly(scriptPubKey)) {
+    //    // TODO: This could be optimized some by doing some work after the above solver
+    //    SignatureData sigs;
+    //    return ProduceSignature(DummySignatureCreator(&keystore), scriptPubKey, sigs) ? ISMINE_WATCH_SOLVABLE : ISMINE_WATCH_UNSOLVABLE;
+    //}
+    return false;
+}
