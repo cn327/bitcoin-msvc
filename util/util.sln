@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "util", "util\util.vcxproj", "{E7DEBC3E-DFBE-4346-AABC-3D3562813979}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "generate-dict", "generate-dict\generate-dict.vcxproj", "{8C5DBB8D-1D03-4138-9967-C9D815E2C907}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "generate-key", "generate-key\generate-key.vcxproj", "{6A33B035-6574-4DD2-8C3F-0638431D3F69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +33,14 @@ Global
 		{8C5DBB8D-1D03-4138-9967-C9D815E2C907}.Release|x64.Build.0 = Release|x64
 		{8C5DBB8D-1D03-4138-9967-C9D815E2C907}.Release|x86.ActiveCfg = Release|Win32
 		{8C5DBB8D-1D03-4138-9967-C9D815E2C907}.Release|x86.Build.0 = Release|Win32
+		{6A33B035-6574-4DD2-8C3F-0638431D3F69}.Debug|x64.ActiveCfg = Debug|x64
+		{6A33B035-6574-4DD2-8C3F-0638431D3F69}.Debug|x64.Build.0 = Debug|x64
+		{6A33B035-6574-4DD2-8C3F-0638431D3F69}.Debug|x86.ActiveCfg = Debug|Win32
+		{6A33B035-6574-4DD2-8C3F-0638431D3F69}.Debug|x86.Build.0 = Debug|Win32
+		{6A33B035-6574-4DD2-8C3F-0638431D3F69}.Release|x64.ActiveCfg = Release|x64
+		{6A33B035-6574-4DD2-8C3F-0638431D3F69}.Release|x64.Build.0 = Release|x64
+		{6A33B035-6574-4DD2-8C3F-0638431D3F69}.Release|x86.ActiveCfg = Release|Win32
+		{6A33B035-6574-4DD2-8C3F-0638431D3F69}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
