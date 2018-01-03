@@ -16,10 +16,8 @@
 #include "ui_interface.h"
 #include "crypto/hmac_sha256.h"
 #include <stdio.h>
-#include "utilstrencodings.h"
 
 #include <boost/algorithm/string.hpp> // boost::trim
-#include <boost/foreach.hpp> //BOOST_FOREACH
 
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
@@ -30,7 +28,7 @@ static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 class HTTPRPCTimer : public RPCTimerBase
 {
 public:
-    HTTPRPCTimer(struct event_base* eventBase, boost::function<void(void)>& func, int64_t millis) :
+    HTTPRPCTimer(struct event_base* eventBase, std::function<void(void)>& func, int64_t millis) :
         ev(eventBase, false, func)
     {
         struct timeval tv;
@@ -48,11 +46,11 @@ public:
     HTTPRPCTimerInterface(struct event_base* _base) : base(_base)
     {
     }
-    const char* Name()
+    const char* Name() override
     {
         return "HTTP";
     }
-    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis)
+    RPCTimerBase* NewTimer(std::function<void(void)>& func, int64_t millis) override
     {
         return new HTTPRPCTimer(base, func, millis);
     }
@@ -93,10 +91,8 @@ static bool multiUserAuthorized(std::string strUserPass)
     std::string strUser = strUserPass.substr(0, strUserPass.find(":"));
     std::string strPass = strUserPass.substr(strUserPass.find(":") + 1);
 
-    if (mapMultiArgs.count("-rpcauth") > 0) {
+    for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
         //Search for multi-user login/pass "rpcauth" from config
-        BOOST_FOREACH(std::string strRPCAuth, mapMultiArgs.at("-rpcauth"))
-        {
             std::vector<std::string> vFields;
             boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
             if (vFields.size() != 3) {
@@ -112,7 +108,7 @@ static bool multiUserAuthorized(std::string strUserPass)
             std::string strSalt = vFields[1];
             std::string strHash = vFields[2];
 
-            const unsigned int KEY_SIZE = 32;
+        static const unsigned int KEY_SIZE = 32;
             unsigned char out[KEY_SIZE];
 
             CHMAC_SHA256(reinterpret_cast<const unsigned char*>(strSalt.c_str()), strSalt.size()).Write(reinterpret_cast<const unsigned char*>(strPass.c_str()), strPass.size()).Finalize(out);
@@ -123,7 +119,6 @@ static bool multiUserAuthorized(std::string strUserPass)
                 return true;
             }
         }
-    }
     return false;
 }
 
@@ -215,7 +210,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 
 static bool InitRPCAuthentication()
 {
-    if (GetArg("-rpcpassword", "") == "")
+    if (gArgs.GetArg("-rpcpassword", "") == "")
     {
         LogPrintf("No rpcpassword set - using random cookie authentication\n");
         if (!GenerateAuthCookie(&strRPCUserColonPass)) {
@@ -226,19 +221,22 @@ static bool InitRPCAuthentication()
         }
     } else {
         LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcuser for rpcauth auth generation.\n");
-        strRPCUserColonPass = GetArg("-rpcuser", "") + ":" + GetArg("-rpcpassword", "");
+        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
     }
     return true;
 }
 
 bool StartHTTPRPC()
 {
-    LogPrint("rpc", "Starting HTTP RPC server\n");
+    LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
     RegisterHTTPHandler("/", true, HTTPReq_JSONRPC);
-
+#ifdef ENABLE_WALLET
+    // ifdef can be removed once we switch to better endpoint support and API versioning
+    RegisterHTTPHandler("/wallet/", false, HTTPReq_JSONRPC);
+#endif
     assert(EventBase());
     httpRPCTimerInterface = new HTTPRPCTimerInterface(EventBase());
     RPCSetTimerInterface(httpRPCTimerInterface);
@@ -247,12 +245,12 @@ bool StartHTTPRPC()
 
 void InterruptHTTPRPC()
 {
-    LogPrint("rpc", "Interrupting HTTP RPC server\n");
+    LogPrint(BCLog::RPC, "Interrupting HTTP RPC server\n");
 }
 
 void StopHTTPRPC()
 {
-    LogPrint("rpc", "Stopping HTTP RPC server\n");
+    LogPrint(BCLog::RPC, "Stopping HTTP RPC server\n");
     UnregisterHTTPHandler("/", true);
     if (httpRPCTimerInterface) {
         RPCUnsetTimerInterface(httpRPCTimerInterface);

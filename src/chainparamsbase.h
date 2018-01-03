@@ -5,6 +5,7 @@
 #ifndef BITCOIN_CHAINPARAMSBASE_H
 #define BITCOIN_CHAINPARAMSBASE_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -40,6 +41,13 @@ protected:
 };
 
 /**
+ * Creates and returns a std::unique_ptr<CBaseChainParams> of the chosen chain.
+ * @returns a CBaseChainParams* of the chosen chain.
+ * @throws a std::runtime_error if the chain is not supported.
+ */
+std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain);
+
+/**
  * Append the help messages for the chainparams options to the
  * parameter string.
  */
@@ -61,11 +69,5 @@ void SelectBaseParams(NetworkType chain);
  * @return CBaseChainParams::MAX_NETWORK_TYPES if an invalid combination is given. CBaseChainParams::MAIN by default.
  */
 NetworkType ChainNameFromCommandLine();
-
-/**
- * Return true if SelectBaseParamsFromCommandLine() has been called to select
- * a network.
- */
-bool AreBaseParamsConfigured();
 
 #endif // BITCOIN_CHAINPARAMSBASE_H

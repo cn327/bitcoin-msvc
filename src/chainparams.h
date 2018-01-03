@@ -11,12 +11,13 @@
 #include "primitives/block.h"
 #include "protocol.h"
 
+#include <memory>
 #include <vector>
 
 struct CDNSSeedData {
-    std::string name, host;
+    std::string host;
     bool supportsServiceBitsFiltering;
-    CDNSSeedData(const std::string &strName, const std::string &strHost, bool supportsServiceBitsFilteringIn = false) : name(strName), host(strHost), supportsServiceBitsFiltering(supportsServiceBitsFilteringIn) {}
+    CDNSSeedData(const std::string &strHost, bool supportsServiceBitsFilteringIn) : host(strHost), supportsServiceBitsFiltering(supportsServiceBitsFilteringIn) {}
 };
 
 struct SeedSpec6 {
@@ -65,8 +66,6 @@ public:
     int GetDefaultPort() const { return nDefaultPort; }
 
     const CBlock& GenesisBlock() const { return genesis; }
-    /** Make miner wait to have peers to avoid wasting work */
-    bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
@@ -82,6 +81,7 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 protected:
     CChainParams() {}
 
@@ -95,7 +95,6 @@ protected:
     //std::string strNetworkID;
     CBlock genesis;
     std::vector<SeedSpec6> vFixedSeeds;
-    bool fMiningRequiresPeers;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
@@ -104,16 +103,17 @@ protected:
 };
 
 /**
+ * Creates and returns a std::unique_ptr<CChainParams> of the chosen chain.
+ * @returns a CChainParams* of the chosen chain.
+ * @throws a std::runtime_error if the chain is not supported.
+ */
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
+
+/**
  * Return the currently selected parameters. This won't change after app
  * startup, except for unit tests.
  */
 const CChainParams &Params();
-
-/**
- * @returns CChainParams for the given BIP70 chain name.
- */
-enum NetworkType;
-CChainParams& Params(NetworkType chain);
 
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.
@@ -122,8 +122,8 @@ CChainParams& Params(NetworkType chain);
 void SelectParams(NetworkType chain);
 
 /**
- * Allows modifying the BIP9 regtest parameters.
+ * Allows modifying the Version Bits regtest parameters.
  */
-void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 
 #endif // BITCOIN_CHAINPARAMS_H

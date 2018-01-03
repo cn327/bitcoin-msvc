@@ -56,7 +56,6 @@ public:
         nRPCPort = 8332;
     }
 };
-static CBaseMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -70,7 +69,6 @@ public:
         strDataDir = "testnet3";
     }
 };
-static CBaseTestNetParams testNetParams;
 
 /*
  * Regression test
@@ -84,37 +82,36 @@ public:
         strDataDir = "regtest";
     }
 };
-static CBaseRegTestParams regTestParams;
 
-static CBaseChainParams* pCurrentBaseParams = 0;
+static std::unique_ptr<CBaseChainParams> globalChainBaseParams;
 
 const CBaseChainParams& BaseParams()
 {
-    assert(pCurrentBaseParams);
-    return *pCurrentBaseParams;
+    assert(globalChainBaseParams);
+    return *globalChainBaseParams;
 }
 
-CBaseChainParams& BaseParams(NetworkType chain)
+std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
 {
     if (chain == NETWORK_MAIN)
-        return mainParams;
+        return std::unique_ptr<CBaseChainParams>(new CBaseMainParams());
     else if (chain == NETWORK_TESTNET)
-        return testNetParams;
+        return std::unique_ptr<CBaseChainParams>(new CBaseTestNetParams());
     else if (chain == NETWORK_REGTEST)
-        return regTestParams;
+        return std::unique_ptr<CBaseChainParams>(new CBaseRegTestParams());
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
 void SelectBaseParams(NetworkType chain)
 {
-    pCurrentBaseParams = &BaseParams(chain);
+    globalChainBaseParams = CreateBaseChainParams(chain);
 }
 
 NetworkType ChainNameFromCommandLine()
 {
-    bool fRegTest = GetBoolArg("-regtest", false);
-    bool fTestNet = GetBoolArg("-testnet", false);
+    bool fRegTest = gArgs.GetBoolArg("-regtest", false);
+    bool fTestNet = gArgs.GetBoolArg("-testnet", false);
 
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
@@ -123,9 +120,4 @@ NetworkType ChainNameFromCommandLine()
     if (fTestNet)
         return NETWORK_TESTNET;
     return NETWORK_MAIN;
-}
-
-bool AreBaseParamsConfigured()
-{
-    return pCurrentBaseParams != NULL;
 }
