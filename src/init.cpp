@@ -301,7 +301,7 @@ static void registerSignalHandler(int signal, void(*handler)(int))
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(signal, &sa, nullptr);
-    }
+}
 #endif
 
 void OnRPCStarted()
@@ -689,9 +689,9 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     }
     } // End scope of CImportingNow
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-    LoadMempool();
-    fDumpMempoolLater = !fRequestShutdown;
-}
+        LoadMempool();
+        fDumpMempoolLater = !fRequestShutdown;
+    }
 }
 
 /** Sanity checks
@@ -930,7 +930,7 @@ bool AppInitParameterInteraction()
                 if (!GetLogCategory(&flag, &cat)) {
                     InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
                     continue;
-    }
+                }
                 logCategories |= flag;
             }
         }
@@ -1064,7 +1064,7 @@ bool AppInitParameterInteraction()
 
     fRequireStandard = !gArgs.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (chainparams.RequireStandard() && !fRequireStandard)
-        return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", NetworkType2String(chainparams.GetNetworkType()).c_str()));
+        return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
@@ -1265,10 +1265,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
     for (const std::string& cmt : gArgs.GetArgs("-uacomment")) {
-            if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
-                return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
-            uacomments.push_back(cmt);
-        }
+        if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
+            return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
+        uacomments.push_back(cmt);
+    }
     strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
         return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
@@ -1341,12 +1341,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     fRelayTxes = !gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
     for (const std::string& strAddr : gArgs.GetArgs("-externalip")) {
-            CService addrLocal;
-            if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
-                AddLocal(addrLocal, LOCAL_MANUAL);
-            else
-                return InitError(ResolveErrMsg("externalip", strAddr));
-        }
+        CService addrLocal;
+        if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
+            AddLocal(addrLocal, LOCAL_MANUAL);
+        else
+            return InitError(ResolveErrMsg("externalip", strAddr));
+    }
 
 #if ENABLE_ZMQ
     pzmqNotificationInterface = CZMQNotificationInterface::Create();
@@ -1492,29 +1492,29 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 }
 
                 if (!is_coinsview_empty) {
-                uiInterface.InitMessage(_("Verifying blocks..."));
+                    uiInterface.InitMessage(_("Verifying blocks..."));
                     if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
-                    LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
-                        MIN_BLOCKS_TO_KEEP);
-                }
-
-                {
-                    LOCK(cs_main);
-                    CBlockIndex* tip = chainActive.Tip();
-                    RPCNotifyBlockChange(true, tip);
-                    if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
-                        strLoadError = _("The block database contains a block which appears to be from the future. "
-                                "This may be due to your computer's date and time being set incorrectly. "
-                                "Only rebuild the block database if you are sure that your computer's date and time are correct");
-                        break;
+                        LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
+                            MIN_BLOCKS_TO_KEEP);
                     }
-                }
+
+                    {
+                        LOCK(cs_main);
+                        CBlockIndex* tip = chainActive.Tip();
+                        RPCNotifyBlockChange(true, tip);
+                        if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                            strLoadError = _("The block database contains a block which appears to be from the future. "
+                                    "This may be due to your computer's date and time being set incorrectly. "
+                                    "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                            break;
+                        }
+                    }
 
                     if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview, gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
                                   gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
-                    strLoadError = _("Corrupted block database detected");
-                    break;
-                }
+                        strLoadError = _("Corrupted block database detected");
+                        break;
+                    }
                 }
             } catch (const std::exception& e) {
                 LogPrintf("%s\n", e.what());
@@ -1554,7 +1554,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         return false;
     }
     if (fLoaded) {
-    LogPrintf(" block index %15dms\n", GetTimeMillis() - nStart);
+        LogPrintf(" block index %15dms\n", GetTimeMillis() - nStart);
     }
 
     fs::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
@@ -1615,7 +1615,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     std::vector<fs::path> vImportFiles;
     for (const std::string& strFile : gArgs.GetArgs("-loadblock")) {
-            vImportFiles.push_back(strFile);
+        vImportFiles.push_back(strFile);
     }
 
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));

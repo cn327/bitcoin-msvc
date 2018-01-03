@@ -73,7 +73,7 @@ void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        m_networkType = NETWORK_MAIN;
+        strNetworkID = "main";
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
@@ -143,8 +143,9 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
 
-        checkpointData = (CCheckpointData) {
-            {
+        //checkpointData = (CCheckpointData) {
+        checkpointData.mapCheckpoints = 
+        {
                 { 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")},
                 { 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6")},
                 { 74000, uint256S("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20")},
@@ -158,7 +159,7 @@ public:
                 {250000, uint256S("0x000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214")},
                 {279000, uint256S("0x0000000000000001ae8c72a0b0c301f67e3afca10e819efa9041e458e9bd7e40")},
                 {295000, uint256S("0x00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983")},
-            }
+            //}
         };
 
         chainTxData = ChainTxData{
@@ -177,7 +178,7 @@ public:
 class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
-        m_networkType = NETWORK_TESTNET;
+        strNetworkID = "test";
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP34Height = 21111;
         consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
@@ -242,9 +243,6 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
 
-        MapCheckpoints tmp = boost::assign::map_list_of
-            (546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70"));
-        checkpointData = CCheckpointData(tmp);
 
         checkpointData = (CCheckpointData) {
             {
@@ -268,7 +266,7 @@ public:
 class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
-        m_networkType = NETWORK_REGTEST;
+        strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
         consensus.BIP34Height = 100000000; // BIP34 has not activated on regtest (far in the future so block v1 are not rejected in tests)
         consensus.BIP34Hash = uint256();
@@ -316,11 +314,12 @@ public:
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
 
-        checkpointData = (CCheckpointData) {
+        checkpointData.mapCheckpoints = { { 0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206") }, };
+        /*checkpointData = (CCheckpointData) {
             {
                 {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
             }
-        };
+        };*/
 
         chainTxData = ChainTxData{
             0,
@@ -345,16 +344,16 @@ const CChainParams &Params() {
 
 std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
 {
-    if (chain == NETWORK_MAIN)
+    if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
-    else if (chain == NETWORK_TESTNET)
+    else if (chain == CBaseChainParams::TESTNET)
         return std::unique_ptr<CChainParams>(new CTestNetParams());
-    else if (chain == NETWORK_REGTEST)
+    else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams());
-        throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+    throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
-void SelectParams(NetworkType network)
+void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
     globalChainParams = CreateChainParams(network);

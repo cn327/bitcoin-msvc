@@ -13,22 +13,13 @@
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
  * of a given instance of the Bitcoin system.
  */
-enum NetworkType
-{
-    NETWORK_MAIN,
-    NETWORK_TESTNET,
-    NETWORK_REGTEST,
-};
-std::string NetworkType2String(NetworkType networkType);
-NetworkType String2NetworkType(const std::string& networkTypeName);
-
 class CBaseChainParams
 {
 public:
     /** BIP70 chain name strings (main, test or regtest) */
-    // static const std::string MAIN;
-    // static const std::string TESTNET;
-    // static const std::string REGTEST;
+    static const std::string MAIN;
+    static const std::string TESTNET;
+    static const std::string REGTEST;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }
@@ -59,15 +50,13 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
  */
 const CBaseChainParams& BaseParams();
 
-CBaseChainParams& BaseParams(NetworkType chain);
-
 /** Sets the params returned by Params() to those for the given network. */
-void SelectBaseParams(NetworkType chain);
+void SelectBaseParams(const std::string& chain);
 
 /**
  * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
  * @return CBaseChainParams::MAX_NETWORK_TYPES if an invalid combination is given. CBaseChainParams::MAIN by default.
  */
-NetworkType ChainNameFromCommandLine();
+std::string ChainNameFromCommandLine();
 
 #endif // BITCOIN_CHAINPARAMSBASE_H

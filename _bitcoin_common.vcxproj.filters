@@ -255,9 +255,6 @@
     <ClCompile Include="src\addrman.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\amount.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\base58.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

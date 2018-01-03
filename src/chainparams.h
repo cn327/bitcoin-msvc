@@ -29,10 +29,6 @@ typedef std::map<int, uint256> MapCheckpoints;
 
 struct CCheckpointData {
     MapCheckpoints mapCheckpoints;
-
-    CCheckpointData() : mapCheckpoints() {}
-    CCheckpointData(const MapCheckpoints& _mapCheckpoints) : mapCheckpoints(_mapCheckpoints) {}
-//  CCheckpointData(const boost::assign_detail::generic_list< std::pair<int, uint256> >& _mapCheckpoints) : mapCheckpoints(_mapCheckpoints) {}
 };
 
 struct ChainTxData {
@@ -74,8 +70,7 @@ public:
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
     /** Return the BIP70 network string (main, test or regtest) */
-    //std::string NetworkIDString() const { return strNetworkID; }
-    NetworkType GetNetworkType() const { return m_networkType; }
+    std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
@@ -91,8 +86,7 @@ protected:
     uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
-    NetworkType m_networkType;
-    //std::string strNetworkID;
+    std::string strNetworkID;
     CBlock genesis;
     std::vector<SeedSpec6> vFixedSeeds;
     bool fDefaultConsistencyChecks;
@@ -119,7 +113,7 @@ const CChainParams &Params();
  * Sets the params returned by Params() to those for the given BIP70 chain name.
  * @throws std::runtime_error when the chain is not supported.
  */
-void SelectParams(NetworkType chain);
+void SelectParams(const std::string& chain);
 
 /**
  * Allows modifying the Version Bits regtest parameters.

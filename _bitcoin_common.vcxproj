@@ -161,7 +161,6 @@
   <ItemGroup>
     <ClCompile Include="src\addrdb.cpp" />
     <ClCompile Include="src\addrman.cpp" />
-    <ClCompile Include="src\amount.cpp" />
     <ClCompile Include="src\arith_uint256.cpp" />
     <ClCompile Include="src\base58.cpp" />
     <ClCompile Include="src\blockencodings.cpp" />

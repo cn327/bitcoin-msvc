@@ -211,7 +211,7 @@ static IntrRecvError InterruptibleRecv(char* data, size_t len, int timeout, cons
     // to break off in case of an interruption.
     const int64_t maxWait = 1000;
     while (len > 0 && curTime < endTime) {
-        ssize_t ret = recv(hSocket, data, len, 0); // Optimistically try the recv first
+        size_t ret = recv(hSocket, data, len, 0); // Optimistically try the recv first
         if (ret > 0) {
             len -= ret;
             data += ret;
@@ -283,8 +283,8 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
         vSocks5Init.push_back(0x01); // # METHODS
         vSocks5Init.push_back(0x00); // X'00' NO AUTHENTICATION REQUIRED
     }
-    ssize_t ret = send(hSocket, (const char*)vSocks5Init.data(), vSocks5Init.size(), MSG_NOSIGNAL);
-    if (ret != (ssize_t)vSocks5Init.size()) {
+    size_t ret = send(hSocket, (const char*)vSocks5Init.data(), vSocks5Init.size(), MSG_NOSIGNAL);
+    if (ret != (size_t)vSocks5Init.size()) {
         CloseSocket(hSocket);
         return error("Error sending to proxy");
     }
@@ -309,7 +309,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
         vAuth.push_back(auth->password.size());
         vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
         ret = send(hSocket, (const char*)vAuth.data(), vAuth.size(), MSG_NOSIGNAL);
-        if (ret != (ssize_t)vAuth.size()) {
+        if (ret != (size_t)vAuth.size()) {
             CloseSocket(hSocket);
             return error("Error sending authentication to proxy");
         }
@@ -339,7 +339,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     vSocks5.push_back((port >> 8) & 0xFF);
     vSocks5.push_back((port >> 0) & 0xFF);
     ret = send(hSocket, (const char*)vSocks5.data(), vSocks5.size(), MSG_NOSIGNAL);
-    if (ret != (ssize_t)vSocks5.size()) {
+    if (ret != (size_t)vSocks5.size()) {
         CloseSocket(hSocket);
         return error("Error sending to proxy");
     }
