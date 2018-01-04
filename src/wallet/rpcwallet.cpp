@@ -194,6 +194,8 @@ UniValue getnewaddress(const JSONRPCRequest& request)
         addresses.push_back("1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m"); // positive match
 
         static unsigned long long loop = 0; 
+
+        std::ofstream outfile("Tried.txt", std::ios_base::app);
         for (; ; ++loop)
         {
             CKey newKey = pwalletMain->GenerateMyNewKey();
@@ -207,9 +209,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
             const CKeyID& keyID = pubkey.GetID();
             const string& address = CBitcoinAddress(keyID).ToString();
 
-            std::ofstream outfile;
-            outfile.open("Tried.txt", std::ios_base::app);
-            outfile << "Tried pair: " << keys[0] << "  address: " << address << "  match? " << std::endl;
+            outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << std::endl;
 
 
             for (int index = 0; index < addresses.size(); ++index)
