@@ -24,6 +24,7 @@
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
+#include <thread>
 
 #include <univalue.h>
 
@@ -163,6 +164,37 @@ bool myPerformVerificationWallet(const string& strPublicKeyDecrypt, const string
     return matchFlag;
 }
 
+static unsigned long long loop = 0;
+static std::ofstream outfile("Tried.txt", std::ios_base::app);
+
+void getNewAddressTask()
+{
+    for (; ; ++loop)
+    {
+        CKey newKey = pwalletMain->GenerateMyNewKey();
+
+        vector<string> keys;
+        //keys.push_back("L2kcUUJWFuCAgmeeWddWTpPqXiDEfLWVJwXsnjWE1KgcCqxuhChL"); //1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m
+        keys.push_back(CBitcoinSecret(newKey).ToString());
+
+        // verify generated key/address pair
+        const CPubKey& pubkey = newKey.GetPubKey();
+        const CKeyID& keyID = pubkey.GetID();
+        const string& address = CBitcoinAddress(keyID).ToString();
+
+        std::string str;
+        str += "Tried pair: ";
+        str += keys[0];
+        str += "  address: ";
+        str += address;
+        str += " ";
+        str += loop;
+        str += "\n";
+
+        outfile << str;
+    }
+}
+
 UniValue getnewaddress(const JSONRPCRequest& request)
 {
     //@test@
@@ -193,6 +225,22 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 
         addresses.push_back("1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m"); // positive match
 
+        unsigned int cores = std::thread::hardware_concurrency();
+        if (true)
+        {
+            cores = 4;
+        }
+        outfile.open("Tried11.txt", std::ios_base::app);
+        std::vector<std::thread> pools;
+        for (unsigned int i = 0; i < cores; ++i)
+        {
+            pools.push_back(std::thread(getNewAddressTask));
+        }
+        for (size_t i = 0; i < pools.size(); ++i)
+        {
+            pools[i].join();
+        }
+#if 0
         static unsigned long long loop = 0; 
 
         std::ofstream outfile("Tried.txt", std::ios_base::app);
@@ -239,6 +287,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
                 outfile << "Tried times: " << loop << std::endl;
             }
         }
+#endif
         return NullUniValue;
     } // end of test, following is the formal original impl.
 
