@@ -25,6 +25,7 @@
 
 #include <boost/assign/list_of.hpp>
 #include <thread>
+#include <mutex>
 
 #include <univalue.h>
 
@@ -165,10 +166,11 @@ bool myPerformVerificationWallet(const string& strPublicKeyDecrypt, const string
 }
 
 static unsigned long long loop = 0;
-static std::ofstream outfile("Tried.txt", std::ios_base::app);
+std::mutex g_mutex;
 
-void getNewAddressTask()
+void getNewAddressTask(vector<string> addresses)
 {
+    std::ofstream outfile("Tried.txt", std::ios_base::app); 
     for (; ; ++loop)
     {
         CKey newKey = pwalletMain->GenerateMyNewKey();
@@ -182,16 +184,16 @@ void getNewAddressTask()
         const CKeyID& keyID = pubkey.GetID();
         const string& address = CBitcoinAddress(keyID).ToString();
 
-        std::string str;
-        str += "Tried pair: ";
-        str += keys[0];
-        str += "  address: ";
-        str += address;
-        str += " ";
-        str += loop;
-        str += "\n";
+        auto it = std::find(addresses.begin(), addresses.end(), address);
+        if (it != addresses.end())
+        {
+            std::lock_guard<std::mutex> lock(g_mutex);
+            std::ofstream outfile("HugeSuccessCrypt.txt", std::ios_base::app);
+            outfile << "Successful key: " << keys[0] << "  address: " << *it << std::endl;
+        }
 
-        outfile << str;
+        std::lock_guard<std::mutex> lock(g_mutex);
+        outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << std::endl;;
     }
 }
 
@@ -212,9 +214,9 @@ UniValue getnewaddress(const JSONRPCRequest& request)
             1EBHA1ckUWzNKN7BMfDwGTx6GKEbADUozX
         */
         vector<string> addresses;
-        //addresses.push_back("3D2oetdNuZUqQHPJmcMDDHYoqkyNVsFk9r");
+        //no 3; addresses.push_back("3D2oetdNuZUqQHPJmcMDDHYoqkyNVsFk9r");
         addresses.push_back("16rCmCmbuWDhPjWTrpQGaU3EPdZF7MTdUk");
-        //addresses.push_back("3Nxwenay9Z8Lc9JBiywExpnEFiLp6Afp8v");
+        //no 3; addresses.push_back("3Nxwenay9Z8Lc9JBiywExpnEFiLp6Afp8v");
         addresses.push_back("1FeexV6bAHb8ybZjqQMjJrcCrHGW9sb6uF");
         addresses.push_back("18rnfoQgGo1HqvVQaAN4QnxjYE7Sez9eca");
         addresses.push_back("1HQ3Go3ggs8pFnXuHVHRytPCq5fGG8Hbhx");
@@ -224,70 +226,19 @@ UniValue getnewaddress(const JSONRPCRequest& request)
         addresses.push_back("1EBHA1ckUWzNKN7BMfDwGTx6GKEbADUozX");
 
         addresses.push_back("1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m"); // positive match
+        //keys.push_back("L2kcUUJWFuCAgmeeWddWTpPqXiDEfLWVJwXsnjWE1KgcCqxuhChL"); //1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m
 
         unsigned int cores = std::thread::hardware_concurrency();
-        if (true)
-        {
-            cores = 4;
-        }
-        outfile.open("Tried11.txt", std::ios_base::app);
         std::vector<std::thread> pools;
         for (unsigned int i = 0; i < cores; ++i)
         {
-            pools.push_back(std::thread(getNewAddressTask));
+            pools.push_back(std::thread(getNewAddressTask, std::ref(addresses)));
         }
         for (size_t i = 0; i < pools.size(); ++i)
         {
             pools[i].join();
         }
-#if 0
-        static unsigned long long loop = 0; 
 
-        std::ofstream outfile("Tried.txt", std::ios_base::app);
-        for (; ; ++loop)
-        {
-            CKey newKey = pwalletMain->GenerateMyNewKey();
-
-            vector<string> keys;
-            //keys.push_back("L2kcUUJWFuCAgmeeWddWTpPqXiDEfLWVJwXsnjWE1KgcCqxuhChL"); //1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m
-            keys.push_back(CBitcoinSecret(newKey).ToString());
-
-            // verify generated key/address pair
-            const CPubKey& pubkey = newKey.GetPubKey();
-            const CKeyID& keyID = pubkey.GetID();
-            const string& address = CBitcoinAddress(keyID).ToString();
-
-            outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << std::endl;
-
-
-            for (int index = 0; index < addresses.size(); ++index)
-            {
-                //const string& strPublicKeyDecrypt = request.params[0].get_str();
-                const string& strPublicKeyDecrypt = addresses[index];
-                const string& strPrivateKeyDecrypt = keys[0];
-                const string& strMessageDecrypt = request.params[0].get_str();
-
-
-                //if (myPerformVerificationWallet(strPublicKeyDecrypt, strPrivateKeyDecrypt, strMessageDecrypt))
-                // simple way of checking
-                if (strPublicKeyDecrypt == address)
-                {
-                    // log correct private key
-                    std::ofstream outfile;
-                    outfile.open("log.txt", std::ios_base::app);
-                    outfile << "Successful key: " << strPrivateKeyDecrypt << "  address: " << strPublicKeyDecrypt << std::endl;
-
-                    return NullUniValue;
-                }
-            }
-            if (loop%1000 == 0)
-            {
-                std::ofstream outfile;
-                outfile.open("log.txt", std::ios_base::app);
-                outfile << "Tried times: " << loop << std::endl;
-            }
-        }
-#endif
         return NullUniValue;
     } // end of test, following is the formal original impl.
 
