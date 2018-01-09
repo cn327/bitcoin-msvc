@@ -193,7 +193,7 @@ void getNewAddressTask(vector<string> addresses)
         }
 
         std::lock_guard<std::mutex> lock(g_mutex);
-        outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << std::endl;;
+        outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << " thread:" << std::this_thread::get_id() << std::endl;;
     }
 }
 
