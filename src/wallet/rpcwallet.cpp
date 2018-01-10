@@ -170,7 +170,8 @@ std::mutex g_mutex;
 
 void getNewAddressTask(vector<string> addresses)
 {
-    std::ofstream outfile("Tried.txt", std::ios_base::app); 
+    std::ofstream outfile("Tried.txt", std::ios_base::app);
+    std::string temp; 
     for (; ; ++loop)
     {
         CKey newKey = pwalletMain->GenerateMyNewKey();
@@ -192,8 +193,22 @@ void getNewAddressTask(vector<string> addresses)
             outfile << "Successful key: " << keys[0] << "  address: " << *it << std::endl;
         }
 
-        std::lock_guard<std::mutex> lock(g_mutex);
-        outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << std::endl;;
+        //outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << std::endl;
+        temp = temp + "Successful key: ";
+        temp = temp + keys[0];
+        temp = temp + "  address: ";
+        temp = temp + address;
+        temp = temp + " ";
+        temp = temp + std::to_string(loop);
+        temp = temp + "\n";
+        
+        if (loop % 1000 == 0)
+        {
+            std::lock_guard<std::mutex> lock(g_mutex);
+            outfile << temp ;
+            outfile.flush();
+            temp.clear();
+        }
     }
 }
 
