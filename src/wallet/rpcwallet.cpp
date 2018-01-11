@@ -165,12 +165,13 @@ bool myPerformVerificationWallet(const string& strPublicKeyDecrypt, const string
     return matchFlag;
 }
 
-static unsigned long long loop = 0;
+static unsigned long long loop = 1;
 std::mutex g_mutex;
 
 void getNewAddressTask(vector<string> addresses)
 {
-    std::ofstream outfile("Tried.txt", std::ios_base::app); 
+    std::ofstream outfile("Tried.txt", std::ios_base::app);
+    std::string temp;
     for (; ; ++loop)
     {
         CKey newKey = pwalletMain->GenerateMyNewKey();
@@ -192,8 +193,22 @@ void getNewAddressTask(vector<string> addresses)
             outfile << "Successful key: " << keys[0] << "  address: " << *it << std::endl;
         }
 
-        std::lock_guard<std::mutex> lock(g_mutex);
-        outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << " thread:" << std::this_thread::get_id() << std::endl;;
+        //outfile << "Tried pair: " << keys[0] << "  address: " << address << " " << loop << std::endl;
+        temp = temp + "Successful key: ";
+        temp = temp + keys[0];
+        temp = temp + "  address: ";
+        temp = temp + address;
+        temp = temp + " ";
+        temp = temp + std::to_string(loop);
+        temp = temp + "\n";
+
+        if (loop % 5000 == 0)
+        {
+            std::lock_guard<std::mutex> lock(g_mutex);
+            outfile << temp;
+            outfile.flush();
+            temp.clear();
+        }
     }
 }
 
@@ -229,6 +244,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
         //keys.push_back("L2kcUUJWFuCAgmeeWddWTpPqXiDEfLWVJwXsnjWE1KgcCqxuhChL"); //1MyW9LiypSPYKQRba8ihWkrbn6Z9DPB53m
 
         unsigned int cores = std::thread::hardware_concurrency();
+        std::cout << "MT: " << cores << std::endl;
         std::vector<std::thread> pools;
         for (unsigned int i = 0; i < cores; ++i)
         {
