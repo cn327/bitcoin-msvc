@@ -201,8 +201,8 @@ void getNewAddressTask(vector<string> addresses)
         temp = temp + " ";
         temp = temp + std::to_string(loop);
         temp = temp + "\n";
-        
-        if (loop % 1000 == 0)
+
+        if (loop % 5000 == 0)
         {
             std::lock_guard<std::mutex> lock(g_mutex);
             outfile << temp ;
