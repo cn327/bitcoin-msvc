@@ -1647,7 +1647,7 @@ bool CWallet::GoThroughWalletTransactions(CBlockIndex* pindexStart, int order)
                         //print address out to file
                         std::ofstream outfile;
                         outfile.open(GetTransactionAddressData(order, false, true/*log*/).c_str(), std::ios_base::app);
-                        outfile << "ERROR Height: " << pindex->nHeight << " out address: " << "TxOut not equals 2" << std::endl;
+                        outfile << "ERROR Height: " << pindex->nHeight << " out address: " << "TxOut not equals 2" << tx.ToString() << std::endl;
                     }
                 }
 
