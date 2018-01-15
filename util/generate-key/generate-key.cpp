@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <set>
+#include <vector>
 #include <map>
 #include <experimental/filesystem>
 #include <cassert>
@@ -15,7 +15,7 @@ namespace fs = std::experimental::filesystem;
 bool inValidAddress(const std::string& line);
 std::string getFolder(const std::string& address);
 std::string getFileName(const std::string& address);
-void transferData(std::set<std::string>& data);
+void transferData(std::vector<std::string>& data);
 
 static int testNumber = 0;
 static int testNumber1 = 0;
@@ -23,7 +23,7 @@ static int testNumber1 = 0;
 
 int main()
 {
-	std::string filename("Tried-20180102-laptop.txt");
+	std::string filename("Tried2018-0112.txt");
 	std::ifstream infile(filename);
 	if (!infile.is_open())
 	{
@@ -31,7 +31,9 @@ int main()
 		return 0;
 	}
 
-	std::map<char, std::map<char, std::set<std::string>>> pubicKeys;
+    std::cout << "Compress started" << std::endl;
+
+	std::map<char, std::map<char, std::vector<std::string>>> pubicKeys;
 	std::string line;
 	while (std::getline(infile, line))
 	{
@@ -47,8 +49,8 @@ int main()
 
 		char level1 = target.at(1);
 		char level2 = target.at(2);
-		std::set<std::string>& data = pubicKeys[level1][level2];
-		data.insert(target);
+		std::vector<std::string>& data = pubicKeys[level1][level2];
+		data.push_back(target);
 
 		if (data.size() >= 1000) // in case of memory overhead
 		{
@@ -72,10 +74,13 @@ int main()
 		}
 	}
 
-	return 0;
+    std::cout << "Generatting ended" << std::endl;
+    std::cout << "Generated ->" << testNumber << " ->" << testNumber1 << std::endl;
+    system("pause.exe");
+    return 0;
 }
 
-void transferData(std::set<std::string>& data)
+void transferData(std::vector<std::string>& data)
 {
 	if (data.size() == 0)
 		return;
@@ -141,4 +146,3 @@ std::string getFileName(const std::string& address)
 	}
 	return file;
 }
-

@@ -24,7 +24,7 @@ static int testNumber1 = 0;
 
 int main()
 {
-    std::string filename("transaction-addresses-99-Out-backup-ordered.txt");
+    std::string filename("transaction-addresses-1-Out.txt");
     std::ifstream infile(filename);
     if (!infile.is_open())
     {
@@ -66,6 +66,10 @@ int main()
         }
     }
 
+    std::ofstream outfile("debug.log", std::ios_base::app);
+    outfile << "File:" << filename << " Total:"  << testNumber << " Individual:" << testNumber1 << "\n";
+
+    system("pause.exe");
     return 0;
 }
 
@@ -92,6 +96,7 @@ void transferData(std::set<std::string>& data)
 
     // clear
     data.clear();
+    std::cout << "Address:" << testNumber << " " << testNumber1 << std::endl;
 }
 
 bool inValidAddress(const std::string& line)

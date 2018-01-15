@@ -165,12 +165,28 @@ bool myPerformVerificationWallet(const string& strPublicKeyDecrypt, const string
     return matchFlag;
 }
 
+
+static std::string currentTime()
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[80];
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d-%I-%M-%S", timeinfo);
+    std::string str(buffer);
+
+    return str;
+}
+
 static unsigned long long loop = 1;
 std::mutex g_mutex;
 
 void getNewAddressTask(vector<string> addresses)
 {
-    std::ofstream outfile("Tried.txt", std::ios_base::app);
+    std::ofstream outfile("Tried-" + currentTime() + ".dat", std::ios_base::app);
     std::string temp;
     for (; ; ++loop)
     {

@@ -27,12 +27,15 @@ int main()
     const std::string targetRoot("../generate-key/");
     const std::string decryptedFile("decrypted.txt");
 
+    std::cout << "Util started" << std::endl;
     for (auto it1 = ALPHA_BET.begin(); it1 != ALPHA_BET.end(); ++it1)
     {
         for (auto it2 = ALPHA_BET.begin(); it2 != ALPHA_BET.end(); ++it2)
         {
             const std::string& sourceFile = sourceRoot + getFolder(*it1) + getFileName(*it2);
             const std::string& targetFile = targetRoot + getFolder(*it1) + getFileName(*it2);
+
+            std::cout << "Source->" << sourceFile << " target->" << targetFile << std::endl;
 
             if (!fs::exists(sourceFile) || !fs::is_regular_file(sourceFile))
                 continue;
@@ -83,6 +86,9 @@ int main()
             }
         }
     }
+
+    std::cout << "Util ended" << std::endl;
+    system("pause.exe");
 
     return 0;
 }
