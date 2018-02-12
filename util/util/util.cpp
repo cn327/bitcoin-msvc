@@ -23,9 +23,19 @@ int main()
 {
     const std::string ALPHA_BET("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
 
-    const std::string sourceRoot("../generate-dict/");
-    const std::string targetRoot("../generate-key/");
+    const std::string sourceRoot("../transaction-dict-to/");
+    const std::string targetRoot("../tried-key-to/");
     const std::string decryptedFile("decrypted.txt");
+
+    if (!fs::exists(sourceRoot + "dict"))
+    {
+        std::cout << "File: " << sourceRoot + "dict" << "  does not exist..." << std::endl;
+    }
+
+    if (!fs::exists(targetRoot + "dict"))
+    {
+        std::cout << "File: " << targetRoot + "dict" << "  does not exist..." << std::endl;
+    }
 
     std::cout << "Util started" << std::endl;
     for (auto it1 = ALPHA_BET.begin(); it1 != ALPHA_BET.end(); ++it1)

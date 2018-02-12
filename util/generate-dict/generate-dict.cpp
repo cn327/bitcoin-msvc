@@ -13,6 +13,7 @@
 
 namespace fs = std::experimental::filesystem;
 
+int generateTransactions(const std::string& filename);
 bool inValidAddress(const std::string& line);
 std::string getFolder(const std::string& address);
 std::string getFileName(const std::string& address);
@@ -21,10 +22,26 @@ void transferData(std::set<std::string>& data);
 static int testNumber = 0;
 static int testNumber1 = 0;
 
-
 int main()
 {
-    std::string filename("transaction-addresses-1-Out.txt");
+    const std::string folderPath("./transaction-dict-from");
+    if (!fs::exists(folderPath))
+    {
+        std::cout << "File: " << folderPath << "  does not exist..." << std::endl;
+    }
+
+    for(auto& file: fs::directory_iterator(folderPath))
+    {
+        (void)generateTransactions(file.path().string());
+    }
+
+    system("pause.exe");
+    return 0;
+}
+
+int generateTransactions(const std::string& filename)
+{
+    //std::string filename("transaction-addresses-1-Out.txt");
     std::ifstream infile(filename);
     if (!infile.is_open())
     {
@@ -69,7 +86,7 @@ int main()
     std::ofstream outfile("debug.log", std::ios_base::app);
     outfile << "File:" << filename << " Total:"  << testNumber << " Individual:" << testNumber1 << "\n";
 
-    system("pause.exe");
+    //system("pause.exe");
     return 0;
 }
 
@@ -108,7 +125,7 @@ bool inValidAddress(const std::string& line)
 std::string getFolder(const std::string& address)
 {
     char folder = address.at(1);
-    std::string root("dict/");
+    std::string root("transaction-dict-to/dict/");
 
     if (isdigit(folder))
         root = root + "D_" + folder + "/";

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <set>
 #include <map>
 #include <experimental/filesystem>
@@ -27,14 +28,19 @@ const std::string LOG_FILE("debug.log");
 
 int main()
 {
+    const std::string folderPath("./merge-from");
+    if (!fs::exists(folderPath))
+    {
+        std::cout << "File: " << folderPath << "  does not exist..." << std::endl;
+    }
+
     std::vector<std::string> dicts;
-    //dicts.push_back(std::string("../generate-dict/merge-source1/"));
-    //dicts.push_back(std::string("../generate-dict/merge-source2/"));
-    //dicts.push_back(std::string("../generate-dict/merge-source3/"));
-    dicts.push_back(std::string("../generate-dict/"));
+    for(auto& file: fs::directory_iterator(folderPath))
+    {
+        dicts.push_back(file.path().string());
+    }
 
-    const std::string targetRoot(""); // currnet
-
+    const std::string targetRoot(""); // current
 
     std::cout << "Compress started" << std::endl;
 
@@ -71,7 +77,7 @@ bool inValidAddress(const std::string& line)
 
 std::string getFolder(char folder)
 {
-    std::string root("dict/");
+    std::string root("merge-to/dict/");
 
     if (isdigit(folder))
         root = root + "D_" + folder + "/";
