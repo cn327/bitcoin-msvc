@@ -23,18 +23,20 @@ int main()
 {
     const std::string ALPHA_BET("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
 
-    const std::string sourceRoot("../transaction-dict-to/");
-    const std::string targetRoot("../tried-key-to/");
+    const std::string sourceRoot("./transaction-dict-to/");
+    const std::string targetRoot("./tried-key-to/");
     const std::string decryptedFile("decrypted.txt");
 
     if (!fs::exists(sourceRoot + "dict"))
     {
         std::cout << "File: " << sourceRoot + "dict" << "  does not exist..." << std::endl;
+        return 0;
     }
 
     if (!fs::exists(targetRoot + "dict"))
     {
         std::cout << "File: " << targetRoot + "dict" << "  does not exist..." << std::endl;
+        return 0;
     }
 
     std::cout << "Util started" << std::endl;
@@ -78,12 +80,14 @@ int main()
                 pubicKeys.insert(line);
             }
 
+            std::cout << "pubicKeys size-> " << pubicKeys.size() << std::endl;
+
             std::string decrypt;
             while (targetInFile >> decrypt)
             {
                 if (inValidAddress(decrypt))
                     continue;
-
+                //std::cout << "Finding-> " << decrypt << std::endl;
                 auto it = pubicKeys.find(decrypt);
                 if (it != pubicKeys.end())
                 {
